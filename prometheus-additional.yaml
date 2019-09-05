@@ -1,0 +1,63 @@
+#kubectl create secret generic additional-configs --from-file=prometheus-additional.yaml -n monitoring
+#kubectl get secret additional-configs -n monitoring -o yaml
+#kubectl delete secret additional-configs -nmonitoring
+- job_name: "eureka-ds"
+  consul_sd_configs:
+    - server: "eureka1.default:8761"
+  metrics_path: /actuator/prometheus
+  relabel_configs:
+    - source_labels: ["__meta_consul_service"]
+      regex: "consul"
+      action: drop
+    - source_labels: ["__meta_consul_tags"]
+      regex: ",(management),"
+      action: drop
+    - source_labels: [__address__]
+      separator: ":"
+      regex: "(.*):(8080)"
+      target_label: __address__
+      replacement: "${1}:8090"
+    - source_labels: ["__meta_consul_service"]
+      regex: "(.*)"
+      target_label: "job"
+      replacement: "$1"
+    - source_labels: ["__meta_consul_service"]
+      regex: "(.*)"
+      target_label: "application"
+      replacement: "$1"
+    - source_labels: ["__meta_consul_service_id"]
+      regex: "(.*)"
+      target_label: "instance"
+      replacement: "$1"
+    - source_labels: ["__meta_consul_tags"]
+      regex: ",(prod|test|dev),"
+      target_label: "group"
+      replacement: "$1"
+#- job_name: 'kubernetes-service-endpoints'
+#  kubernetes_sd_configs:
+#    - role: endpoints
+#  relabel_configs:
+#    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_springscrape]
+#      action: keep
+#      regex: true
+#    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+#      action: replace
+#      target_label: __scheme__
+#      regex: (https?)
+#    - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+#      action: replace
+#      target_label: __metrics_path__
+#      regex: (.+)
+#    - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+#      action: replace
+#      target_label: __address__
+#      regex: ([^:]+)(?::\d+)?;(\d+)
+#      replacement: $1:$2
+#    - action: labelmap
+#      regex: __meta_kubernetes_service_label_(.+)
+#    - source_labels: [__meta_kubernetes_namespace]
+#      action: replace
+#      target_label: kubernetes_namespace
+#    - source_labels: [__meta_kubernetes_service_name]
+#      action: replace
+#      target_label: kubernetes_name

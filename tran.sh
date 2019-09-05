@@ -1,0 +1,1 @@
+jsonnet -J vendor -S --tla-str repository=freemanliu ./sync-to-internal-registry.jsonnet > tras.sh
